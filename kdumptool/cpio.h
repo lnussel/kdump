@@ -29,6 +29,8 @@
 
 class CPIOMember {
 
+        static const unsigned long MODE_MASK = 07777UL;
+
     protected:
         unsigned long m_ino;
         unsigned long m_mode;
@@ -49,6 +51,8 @@ class CPIOMember {
         unsigned long ino() const
         { return m_ino; }
 
+        void mode(unsigned long val)
+        { m_mode = (val & MODE_MASK) | (m_mode & ~MODE_MASK); }
         unsigned long mode() const
         { return m_mode; }
 
