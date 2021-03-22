@@ -102,6 +102,23 @@ class CPIOTrailer : public CPIOMember {
 };
 
 //}}}
+//{{{ CPIOFile -----------------------------------------------------------------
+
+class CPIOFile : public CPIOMember {
+
+    protected:
+        std::string m_srcpath;
+
+    public:
+        CPIOFile(std::string const &name, std::string const &srcpath);
+        CPIOFile(std::string const &path)
+            : CPIOFile(path, path)
+        { }
+
+        virtual void writeData(std::ostream &os) const;
+};
+
+//}}}
 //{{{ CPIO_newc ----------------------------------------------------------------
 
 /**

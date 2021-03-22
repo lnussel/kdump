@@ -20,6 +20,13 @@
 #include <ostream>
 #include <iomanip>
 #include <string>
+#include <cerrno>
+#include <fstream>
+
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/sysmacros.h>
 
 #include "global.h"
 #include "cpio.h"
@@ -50,6 +57,36 @@ CPIOTrailer::CPIOTrailer()
 void CPIOTrailer::writeData(ostream &os) const
 {
     // no data
+}
+
+//}}}
+//{{{ CPIOFile -----------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+CPIOFile::CPIOFile(std::string const &dstpath, std::string const &srcpath)
+    : CPIOMember(dstpath), m_srcpath(srcpath)
+{
+    struct stat s;
+    if (stat(m_srcpath.c_str(), &s))
+        throw KSystemError("Cannot stat " + srcpath, errno);
+
+    m_ino = s.st_ino;
+    m_mode = s.st_mode;
+    m_uid = s.st_uid;
+    m_gid = s.st_gid;
+    m_mtime = s.st_mtim.tv_sec;
+    m_filesize = s.st_size;
+    m_devmajor = major(s.st_dev);
+    m_devminor = minor(s.st_dev);
+    m_rdevmajor = major(s.st_rdev);
+    m_rdevminor = minor(s.st_rdev);
+}
+
+// -----------------------------------------------------------------------------
+void CPIOFile::writeData(ostream &os) const
+{
+    std::ifstream fin(m_srcpath);
+    os << fin.rdbuf();
 }
 
 //}}}
