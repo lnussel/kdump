@@ -60,6 +60,9 @@ void CPIO_newc::write(ostream &os)
 {
     static const unsigned long BLKLEN = 512;
 
+    for (auto m : m_members)
+        writeMember(os, *m);
+
     CPIOTrailer trailer;
     writeMember(os, trailer);
 

@@ -22,6 +22,8 @@
 
 #include <ostream>
 #include <string>
+#include <list>
+#include <memory>
 
 //{{{ CPIOMember ---------------------------------------------------------------
 
@@ -111,14 +113,21 @@ class CPIO_newc {
         unsigned long m_size;
 
     public:
+        using Member = std::shared_ptr<CPIOMember>;
+
         CPIO_newc()
             : m_size(0)
         { }
+
+        void add(Member &&member)
+        { m_members.push_back(member); }
 
         void write(std::ostream &os);
 
     protected:
         void writeMember(std::ostream &os, CPIOMember const &member);
+
+        std::list<Member> m_members;
 };
 
 //}}}
