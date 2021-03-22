@@ -118,6 +118,20 @@ class CPIOSynth : public CPIOMember {
 };
 
 //}}}
+//{{{ CPIOMemory ---------------------------------------------------------------
+
+class CPIOMemory : public CPIOSynth {
+
+    protected:
+        const char *m_buf;
+
+    public:
+        CPIOMemory(std::string const &name, const char *buf, size_t len);
+
+        virtual void writeData(std::ostream &os) const;
+};
+
+//}}}
 //{{{ CPIOFile -----------------------------------------------------------------
 
 class CPIOFile : public CPIOMember {

@@ -65,6 +65,23 @@ void CPIOTrailer::writeData(ostream &os) const
 int CPIOSynth::m_lastino;
 
 //}}}
+//{{{ CPIOMemory ---------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+CPIOMemory::CPIOMemory(std::string const &name, const char *buf, size_t len)
+    : CPIOSynth(name), m_buf(buf)
+{
+    m_mode = 0100000;           // Regular file
+    m_filesize = len;
+}
+
+// -----------------------------------------------------------------------------
+void CPIOMemory::writeData(std::ostream &os) const
+{
+    os.write(m_buf, m_filesize);
+}
+
+//}}}
 //{{{ CPIOFile -----------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
