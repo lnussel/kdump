@@ -102,6 +102,8 @@ SET(COMMON_SRC
     calibrate.h
     routable.cc
     routable.h
+    cpio.cc
+    cpio.h
 )
 
 add_library(common STATIC ${COMMON_SRC})
