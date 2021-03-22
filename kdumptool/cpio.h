@@ -102,6 +102,22 @@ class CPIOTrailer : public CPIOMember {
 };
 
 //}}}
+//{{{ CPIOSynth ----------------------------------------------------------------
+
+/**
+ * Base class for synthesized CPIO members.
+ */
+class CPIOSynth : public CPIOMember {
+    private:
+        static int m_lastino;
+
+    public:
+        CPIOSynth(std::string const &name)
+            : CPIOMember(name)
+        { m_ino = ++m_lastino; }
+};
+
+//}}}
 //{{{ CPIOFile -----------------------------------------------------------------
 
 class CPIOFile : public CPIOMember {
