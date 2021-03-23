@@ -34,6 +34,8 @@
 
 static const char DATA_DIRECTORY[] = "/usr/lib/kdump";
 
+static const char SYSTEM_UNIT_DIR[] = "/usr/lib/systemd/system";
+
 using std::cerr;
 using std::endl;
 using std::string;
@@ -51,6 +53,7 @@ class MakeDumpRamDisk {
         int execute();
 
     private:
+        FilePath systemUnitPath(const char *name);
         bool addDataFile(const char *name, const char *destdir);
 };
 
@@ -133,6 +136,12 @@ void MakeDumpRamDisk::printVersion()
 }
 
 // -----------------------------------------------------------------------------
+FilePath MakeDumpRamDisk::systemUnitPath(const char *name)
+{
+    return FilePath(SYSTEM_UNIT_DIR).appendPath(name);
+}
+
+// -----------------------------------------------------------------------------
 bool MakeDumpRamDisk::addDataFile(const char *name, const char *destdir)
 {
     FilePath src(DATA_DIRECTORY);
@@ -147,6 +156,9 @@ bool MakeDumpRamDisk::addDataFile(const char *name, const char *destdir)
 // -----------------------------------------------------------------------------
 int MakeDumpRamDisk::execute()
 {
+    addDataFile("kdump.target", SYSTEM_UNIT_DIR);
+    m_cpio.symlink("kdump.target", systemUnitPath("default.target"));
+
     m_cpio.write(std::cout);
 
     return 0;

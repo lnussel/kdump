@@ -1,0 +1,5 @@
+[Unit]
+Description=Kernel dump
+Documentation=man:kdump(7)
+Requires=kdump-save.service
+AllowIsolate=yes
