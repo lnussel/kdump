@@ -213,6 +213,16 @@ class CPIO_newc {
          */
         bool addPath(Member &&member);
 
+        /**
+         * Create a symbolic link.
+         *
+         * @params[in] target Target of the symbolic link.
+         * @params[in] name Name of the link.
+         * @returns @c true if the member was inserted,
+         *          @c false if the given path was already in the archive
+         */
+        bool symlink(std::string const &target, std::string const &name);
+
         void write(std::ostream &os);
 
     protected:

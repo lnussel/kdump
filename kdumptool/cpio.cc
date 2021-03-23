@@ -178,6 +178,12 @@ bool CPIO_newc::addPath(Member &&member)
 }
 
 // -----------------------------------------------------------------------------
+bool CPIO_newc::symlink(std::string const &target, std::string const &name)
+{
+    return add(make_shared<CPIOSymlink>(name, target));
+}
+
+// -----------------------------------------------------------------------------
 void CPIO_newc::write(ostream &os)
 {
     static const unsigned long BLKLEN = 512;
