@@ -114,6 +114,12 @@ add_executable(kdumptool
 target_link_libraries(kdumptool common ${EXTRA_LIBS})
 install (TARGETS kdumptool DESTINATION sbin)
 
+add_executable(mkdumprd
+    mkdumprd.cc
+)
+target_link_libraries(mkdumprd common ${EXTRA_LIBS})
+install (TARGETS kdumptool DESTINATION sbin)
+
 add_executable(testio
     testio.cc
 )
