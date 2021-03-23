@@ -185,8 +185,10 @@ void CPIO_newc::writeMember(ostream &os, CPIOMember const &member)
     m_size += member.fileSize();
 
     padsz = 4 - (m_size % 4);
-    os.write(pad, padsz);
-    m_size += padsz;
+    if (padsz != 4) {
+        os.write(pad, padsz);
+        m_size += padsz;
+    }
 }
 
 //}}}
