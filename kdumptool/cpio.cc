@@ -38,8 +38,8 @@ using std::setw;
 //{{{ CPIOMember ---------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-CPIOMember::CPIOMember(std::string const &name)
-    : m_ino(0), m_mode(0), m_uid(0), m_gid(0), m_nlink(1),
+CPIOMember::CPIOMember(std::string const &name, unsigned long mode)
+    : m_ino(0), m_mode(mode), m_uid(0), m_gid(0), m_nlink(1),
       m_mtime(0), m_filesize(0), m_devmajor(0), m_devminor(0),
       m_rdevmajor(0), m_rdevminor(0), m_name(name)
 {
@@ -53,7 +53,7 @@ CPIOMember::CPIOMember(std::string const &name)
 
 // -----------------------------------------------------------------------------
 CPIOTrailer::CPIOTrailer()
-    : CPIOMember("TRAILER!!!")
+    : CPIOMember("TRAILER!!!", 0)
 {
 }
 
@@ -72,11 +72,10 @@ int CPIOSynth::m_lastino;
 //{{{ CPIODirectory ------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-CPIODirectory::CPIODirectory(std::string const &name)
-    : CPIOSynth(name)
+CPIODirectory::CPIODirectory(std::string const &name, unsigned long mode)
+    : CPIOSynth(name, 040000 | (mode & MODE_MASK))
 {
-    m_mode = 040000;            // Directory
-};
+}
 
 // -----------------------------------------------------------------------------
 void CPIODirectory::writeData(std::ostream &os) const
@@ -88,10 +87,10 @@ void CPIODirectory::writeData(std::ostream &os) const
 //{{{ CPIOMemory ---------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-CPIOMemory::CPIOMemory(std::string const &name, const char *buf, size_t len)
-    : CPIOSynth(name), m_buf(buf)
+CPIOMemory::CPIOMemory(std::string const &name, const char *buf, size_t len,
+                       unsigned long mode)
+    : CPIOSynth(name, 0100000 | (mode & MODE_MASK)), m_buf(buf)
 {
-    m_mode = 0100000;           // Regular file
     m_filesize = len;
 }
 
@@ -106,7 +105,7 @@ void CPIOMemory::writeData(std::ostream &os) const
 
 // -----------------------------------------------------------------------------
 CPIOFile::CPIOFile(std::string const &dstpath, std::string const &srcpath)
-    : CPIOMember(dstpath), m_srcpath(srcpath)
+    : CPIOMember(dstpath, 0), m_srcpath(srcpath)
 {
     struct stat s;
     if (stat(m_srcpath.c_str(), &s))

@@ -29,9 +29,9 @@
 
 class CPIOMember {
 
+    protected:
         static const unsigned long MODE_MASK = 07777UL;
 
-    protected:
         unsigned long m_ino;
         unsigned long m_mode;
         unsigned long m_uid;
@@ -46,7 +46,7 @@ class CPIOMember {
         std::string m_name;
 
     public:
-        CPIOMember(std::string const &name);
+        CPIOMember(std::string const &name, unsigned long mode);
 
         unsigned long ino() const
         { return m_ino; }
@@ -116,8 +116,8 @@ class CPIOSynth : public CPIOMember {
         static int m_lastino;
 
     public:
-        CPIOSynth(std::string const &name)
-            : CPIOMember(name)
+        CPIOSynth(std::string const &name, unsigned long mode)
+            : CPIOMember(name, mode)
         { m_ino = ++m_lastino; }
 };
 
@@ -127,7 +127,7 @@ class CPIOSynth : public CPIOMember {
 class CPIODirectory : public CPIOSynth {
 
     public:
-        CPIODirectory(std::string const &name);
+        CPIODirectory(std::string const &name, unsigned long mode = 0755);
 
         virtual void writeData(std::ostream &os) const;
 };
@@ -141,7 +141,8 @@ class CPIOMemory : public CPIOSynth {
         const char *m_buf;
 
     public:
-        CPIOMemory(std::string const &name, const char *buf, size_t len);
+        CPIOMemory(std::string const &name, const char *buf, size_t len,
+                   unsigned long mode = 0644);
 
         virtual void writeData(std::ostream &os) const;
 };
