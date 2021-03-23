@@ -19,6 +19,11 @@
 #ifndef KELF_H
 #define KELF_H
 
+#include <string>
+#include <memory>
+
+#include <sys/types.h>
+
 #include "global.h"
 
 //{{{ KElfErrorCode ------------------------------------------------------------
@@ -36,6 +41,49 @@ class KElfErrorCode : public KErrorCode {
 };
 
 typedef KCodeError<KElfErrorCode> KElfError;
+
+//}}}
+//{{{ KElf ---------------------------------------------------------------------
+
+/**
+ * Class for accessing ELF files.
+ */
+class KElf {
+    protected:
+        int m_fd;
+        size_t m_phdrnum;
+        size_t m_shdrnum;
+
+    public:
+        /**
+         * Open an ELF file by path.
+         */
+        KElf(std::string const &path);
+        ~KElf();
+
+        size_t phdrNum() const
+        { return m_phdrnum; }
+
+        size_t shdrNum() const
+        { return m_shdrnum; }
+
+
+        struct Mapping {
+            char *data;
+            Elf *elf;
+            off_t offset;
+            size_t length;
+
+            Mapping(off_t _offset, size_t _length);
+            ~Mapping();
+        };
+        typedef std::unique_ptr<struct Mapping> MappedData;
+        MappedData map(off_t offset, size_t length);
+
+    private:
+        MappedData m_map;
+        long m_pagesize;
+};
 
 //}}}
 
