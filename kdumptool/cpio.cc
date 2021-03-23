@@ -42,6 +42,9 @@ CPIOMember::CPIOMember(std::string const &name)
       m_mtime(0), m_filesize(0), m_devmajor(0), m_devminor(0),
       m_rdevmajor(0), m_rdevminor(0), m_name(name)
 {
+    auto it = m_name.begin();
+    if (it != m_name.end() && *it == '/')
+        m_name.erase(it);
 }
 
 //}}}
