@@ -26,10 +26,13 @@
 #include "optionparser.h"
 #include "configuration.h"
 #include "cpio.h"
+#include "fileutil.h"
 
 #define PROGRAM_NAME                "mkdumprd"
 #define PROGRAM_VERSION_STRING      PROGRAM_NAME " " PACKAGE_VERSION
 #define DEFAULT_CONFIG              "/etc/sysconfig/kdump"
+
+static const char DATA_DIRECTORY[] = "/usr/lib/kdump";
 
 using std::cerr;
 using std::endl;
@@ -46,6 +49,9 @@ class MakeDumpRamDisk {
         bool parseCommandLine(int argc, char *argv[]);
         void printVersion();
         int execute();
+
+    private:
+        bool addDataFile(const char *name, const char *destdir);
 };
 
 // -----------------------------------------------------------------------------
@@ -124,6 +130,18 @@ bool MakeDumpRamDisk::parseCommandLine(int argc, char *argv[])
 void MakeDumpRamDisk::printVersion()
 {
     cerr << PROGRAM_VERSION_STRING << endl;
+}
+
+// -----------------------------------------------------------------------------
+bool MakeDumpRamDisk::addDataFile(const char *name, const char *destdir)
+{
+    FilePath src(DATA_DIRECTORY);
+    FilePath dst(destdir);
+
+    src.appendPath(name);
+    dst.appendPath(name);
+
+    return m_cpio.addPath(std::make_shared<CPIOFile>(dst, src));
 }
 
 // -----------------------------------------------------------------------------
