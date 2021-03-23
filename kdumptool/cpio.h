@@ -22,7 +22,7 @@
 
 #include <ostream>
 #include <string>
-#include <list>
+#include <map>
 #include <memory>
 
 //{{{ CPIOMember ---------------------------------------------------------------
@@ -181,15 +181,21 @@ class CPIO_newc {
             : m_size(0)
         { }
 
-        void add(Member &&member)
-        { m_members.push_back(member); }
+        /**
+         * Add a new member to the archive.
+         *
+         * @params[in] member New member pointer
+         * @returns @c true if the member was inserted,
+         *          @c false if the given path was already in the archive
+         */
+        bool add(Member &&member);
 
         void write(std::ostream &os);
 
     protected:
         void writeMember(std::ostream &os, CPIOMember const &member);
 
-        std::list<Member> m_members;
+        std::map<std::string, Member> m_members;
 };
 
 //}}}

@@ -131,12 +131,18 @@ void CPIOFile::writeData(ostream &os) const
 //{{{ CPIO_newc ----------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
+bool CPIO_newc::add(Member &&member)
+{
+    return m_members.emplace(member->name(), member).second;
+}
+
+// -----------------------------------------------------------------------------
 void CPIO_newc::write(ostream &os)
 {
     static const unsigned long BLKLEN = 512;
 
     for (auto m : m_members)
-        writeMember(os, *m);
+        writeMember(os, *m.second);
 
     CPIOTrailer trailer;
     writeMember(os, trailer);
