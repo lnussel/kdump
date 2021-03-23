@@ -131,6 +131,20 @@ class CPIODirectory : public CPIOSynth {
 };
 
 //}}}
+//{{{ CPIOSymlink --------------------------------------------------------------
+
+class CPIOSymlink : public CPIOSynth {
+
+    protected:
+        std::string m_target;
+
+    public:
+        CPIOSymlink(std::string const &name, std::string const &target);
+
+        virtual void writeData(std::ostream &os) const;
+};
+
+//}}}
 //{{{ CPIOMemory ---------------------------------------------------------------
 
 class CPIOMemory : public CPIOSynth {

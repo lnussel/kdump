@@ -36,6 +36,8 @@
 using std::ostream;
 using std::setw;
 
+using std::make_shared;
+
 //{{{ CPIOMember ---------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
@@ -90,6 +92,21 @@ CPIODirectory::CPIODirectory(std::string const &name, unsigned long mode)
 void CPIODirectory::writeData(std::ostream &os) const
 {
     // no data
+}
+
+//}}}
+//{{{ CPIOSymlink --------------------------------------------------------------
+
+CPIOSymlink::CPIOSymlink(std::string const &name, std::string const &target)
+    : CPIOSynth(name, 0120777), m_target(target)
+{
+    m_filesize = m_target.length();
+}
+
+// -----------------------------------------------------------------------------
+void CPIOSymlink::writeData(std::ostream &os) const
+{
+    os << m_target;
 }
 
 //}}}
@@ -154,7 +171,7 @@ bool CPIO_newc::addPath(Member &&member)
     FilePath path(member->name());
     while (!path.empty() && path != ".") {
         path = path.dirName();
-        m_members.emplace(path, std::make_shared<CPIODirectory>(path));
+        m_members.emplace(path, make_shared<CPIODirectory>(path));
     }
 
     return m_members.emplace(member->name(), member).second;
