@@ -65,6 +65,22 @@ void CPIOTrailer::writeData(ostream &os) const
 int CPIOSynth::m_lastino;
 
 //}}}
+//{{{ CPIODirectory ------------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+CPIODirectory::CPIODirectory(std::string const &name)
+    : CPIOSynth(name)
+{
+    m_mode = 040000;            // Directory
+};
+
+// -----------------------------------------------------------------------------
+void CPIODirectory::writeData(std::ostream &os) const
+{
+    // no data
+}
+
+//}}}
 //{{{ CPIOMemory ---------------------------------------------------------------
 
 // -----------------------------------------------------------------------------

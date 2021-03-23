@@ -122,6 +122,17 @@ class CPIOSynth : public CPIOMember {
 };
 
 //}}}
+//{{{ CPIODirectory ------------------------------------------------------------
+
+class CPIODirectory : public CPIOSynth {
+
+    public:
+        CPIODirectory(std::string const &name);
+
+        virtual void writeData(std::ostream &os) const;
+};
+
+//}}}
 //{{{ CPIOMemory ---------------------------------------------------------------
 
 class CPIOMemory : public CPIOSynth {
