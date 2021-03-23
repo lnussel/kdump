@@ -22,6 +22,7 @@
 #include <string>
 #include <cerrno>
 #include <fstream>
+#include <ctime>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -67,6 +68,14 @@ void CPIOTrailer::writeData(ostream &os) const
 //{{{ CPIOSynth ----------------------------------------------------------------
 
 int CPIOSynth::m_lastino;
+
+// -----------------------------------------------------------------------------
+CPIOSynth::CPIOSynth(std::string const &name, unsigned long mode)
+    : CPIOMember(name, mode)
+{
+    m_ino = ++m_lastino;
+    m_mtime = time(NULL);
+}
 
 //}}}
 //{{{ CPIODirectory ------------------------------------------------------------

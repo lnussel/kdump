@@ -116,9 +116,7 @@ class CPIOSynth : public CPIOMember {
         static int m_lastino;
 
     public:
-        CPIOSynth(std::string const &name, unsigned long mode)
-            : CPIOMember(name, mode)
-        { m_ino = ++m_lastino; }
+        CPIOSynth(std::string const &name, unsigned long mode);
 };
 
 //}}}
