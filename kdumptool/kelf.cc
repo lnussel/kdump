@@ -167,6 +167,22 @@ KElf::MappedData KElf::map(off_t offset, size_t length)
     return ret;
 }
 
+// -----------------------------------------------------------------------------
+void KElf::getPhdr(int index, GElf_Phdr *phdr) const
+{
+    if (!gelf_getphdr(m_map->elf, index, phdr))
+        throw KElfError("Cannot get ELF program header", elf_errno());
+}
+
+// -----------------------------------------------------------------------------
+Elf_Scn *KElf::getScn(int index) const
+{
+    Elf_Scn *ret = elf_getscn(m_map->elf, index);
+    if (!ret)
+        throw KElfError("Cannot get ELF section descriptor", elf_errno());
+    return ret;
+}
+
 //}}}
 
 // vim: set sw=4 ts=4 fdm=marker et: :collapseFolds=1:

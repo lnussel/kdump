@@ -23,6 +23,8 @@
 #include <memory>
 
 #include <sys/types.h>
+#include <libelf.h>
+#include <gelf.h>
 
 #include "global.h"
 
@@ -64,9 +66,24 @@ class KElf {
         size_t phdrNum() const
         { return m_phdrnum; }
 
+        /**
+         * Get an ELF program header.
+         *
+         * @param[in] index Program header index.
+         * @param[out] phdr Filled with program header data on success.
+         */
+        void getPhdr(int index, GElf_Phdr *phdr) const;
+
         size_t shdrNum() const
         { return m_shdrnum; }
 
+        /**
+         * Get an ELF section descriptor.
+         *
+         * @param[in] index Section index.
+         * @returns Section descriptor.
+         */
+        Elf_Scn *getScn(int index) const;
 
         struct Mapping {
             char *data;
