@@ -190,6 +190,16 @@ class CPIO_newc {
          */
         bool add(Member &&member);
 
+        /**
+         * Add a new member with full path. This works just like add(),
+         * but it also adds all missing path components.
+         *
+         * @params[in] member New member pointer
+         * @returns @c true if the member was inserted,
+         *          @c false if the given path was already in the archive
+         */
+        bool addPath(Member &&member);
+
         void write(std::ostream &os);
 
     protected:

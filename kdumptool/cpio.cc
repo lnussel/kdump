@@ -30,6 +30,7 @@
 
 #include "global.h"
 #include "cpio.h"
+#include "fileutil.h"
 
 using std::ostream;
 using std::setw;
@@ -136,6 +137,18 @@ void CPIOFile::writeData(ostream &os) const
 // -----------------------------------------------------------------------------
 bool CPIO_newc::add(Member &&member)
 {
+    return m_members.emplace(member->name(), member).second;
+}
+
+// -----------------------------------------------------------------------------
+bool CPIO_newc::addPath(Member &&member)
+{
+    FilePath path(member->name());
+    while (!path.empty() && path != ".") {
+        path = path.dirName();
+        m_members.emplace(path, std::make_shared<CPIODirectory>(path));
+    }
+
     return m_members.emplace(member->name(), member).second;
 }
 
