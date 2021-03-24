@@ -84,7 +84,7 @@ KElf::KElf(std::string const &path)
         throw KError("libelf is out of date.");
 
     off_t endhdr = _headersEndOffset();
-    if (endhdr > m_map->length)
+    if (endhdr > static_cast<off_t>(m_map->length))
         m_map = map(0, endhdr);
 
     m_map->elf = elf_memory(m_map->data, m_map->length);

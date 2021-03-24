@@ -115,7 +115,7 @@ class KElf {
 
     private:
         MappedData m_map;
-        long m_pagesize;
+        unsigned long m_pagesize;
 
         // DYNAMIC segment
         Elf_Data *m_dynamic;
