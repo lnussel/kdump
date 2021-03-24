@@ -216,9 +216,13 @@ Elf_Scn *KElf::getScn(int index) const
 Elf_Data *KElf::dynamicData()
 {
     if (m_dynamic && !m_dynamic->d_buf) {
-        m_dynamicmap = map(m_dynamic->d_off, m_dynamic->d_size);
-        m_dynamic->d_buf = m_dynamicmap->data +
-            m_dynamic->d_off - m_dynamicmap->offset;
+        if (m_dynamic->d_off + m_dynamic->d_size <= m_map->length) {
+            m_dynamic->d_buf = m_map->data + m_dynamic->d_off;
+        } else {
+            m_dynamicmap = map(m_dynamic->d_off, m_dynamic->d_size);
+            m_dynamic->d_buf = m_dynamicmap->data +
+                m_dynamic->d_off - m_dynamicmap->offset;
+        }
     }
     return m_dynamic;
 }
