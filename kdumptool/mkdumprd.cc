@@ -39,11 +39,14 @@ static const char SYSTEM_UNIT_DIR[] = "/usr/lib/systemd/system";
 static const char* const systemd_utils[] = {
     "systemd",
     "systemd-shutdown",
+    "systemd-sulogin-shell",
     NULL
 };
 
 // standard systemd units to be copied from the running system
 static const char* const system_units[] = {
+    "emergency.service",
+    "emergency.target",
     "final.target",
     "reboot.target",
     "shutdown.target",
