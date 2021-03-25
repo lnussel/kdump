@@ -32,7 +32,7 @@
 #include <gelf.h>
 
 #include "global.h"
-#include "elf.h"
+#include "kelf.h"
 #include "util.h"
 #include "debug.h"
 #include "fileutil.h"

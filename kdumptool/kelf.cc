@@ -21,7 +21,7 @@
 
 #include <gelf.h>
 
-#include "elf.h"
+#include "kelf.h"
 
 using std::string;
 

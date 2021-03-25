@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
  * 02110-1301, USA.
  */
-#ifndef ELF_H
-#define ELF_H
+#ifndef KELF_H
+#define KELF_H
 
 #include "global.h"
 
@@ -39,6 +39,6 @@ typedef KCodeError<KElfErrorCode> KElfError;
 
 //}}}
 
-#endif /* ELF_H */
+#endif /* KELF_H */
 
 // vim: set sw=4 ts=4 fdm=marker et: :collapseFolds=1:

@@ -30,7 +30,7 @@
 
 #include "global.h"
 #include "debug.h"
-#include "elf.h"
+#include "kelf.h"
 #include "vmcoreinfo.h"
 #include "stringutil.h"
 #include "stringvector.h"
