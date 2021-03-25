@@ -38,7 +38,29 @@ static const char SYSTEM_UNIT_DIR[] = "/usr/lib/systemd/system";
 // programs to be installed in the systemd util dir
 static const char* const systemd_utils[] = {
     "systemd",
+    "systemd-shutdown",
     NULL
+};
+
+// standard systemd units to be copied from the running system
+static const char* const system_units[] = {
+    "final.target",
+    "reboot.target",
+    "shutdown.target",
+    "sysinit.target",
+    "systemd-reboot.service",
+    "umount.target",
+    NULL
+};
+
+// systemd unit links
+static struct {
+    const char *path;
+    const char *target;
+} const system_unit_links[] = {
+    { "default.target", "kdump.target" },
+    { "ctrl-alt-del.target", "reboot.target" },
+    { NULL, NULL }
 };
 
 using std::cerr;
@@ -160,8 +182,14 @@ int MakeDumpRamDisk::execute()
     systemd.appendPath("systemd");
     m_cpio.symlink(systemd, "/init");
 
+    // systemd system units
+    for (auto name = system_units; *name; ++name)
+        m_cpio.installFile(systemUnitPath(*name), SYSTEM_UNIT_DIR);
     m_cpio.installData("kdump.target", SYSTEM_UNIT_DIR);
-    m_cpio.symlink("kdump.target", systemUnitPath("default.target"));
+
+    // additional systemd links
+    for (auto link = system_unit_links; link->path; ++link)
+        m_cpio.symlink(link->target, systemUnitPath(link->path));
 
     m_cpio.write(std::cout);
 
