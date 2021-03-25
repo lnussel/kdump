@@ -25,6 +25,8 @@
 #include <map>
 #include <memory>
 
+#include <sys/types.h>
+
 //{{{ CPIOMember ---------------------------------------------------------------
 
 class CPIOMember {
@@ -38,7 +40,6 @@ class CPIOMember {
         unsigned long m_gid;
         unsigned long m_nlink;
         unsigned long m_mtime;
-        unsigned long m_filesize;
         unsigned long m_devmajor;
         unsigned long m_devminor;
         unsigned long m_rdevmajor;
@@ -74,8 +75,7 @@ class CPIOMember {
         unsigned long mtime() const
         { return m_mtime; }
 
-        unsigned long fileSize() const
-        { return m_filesize; }
+        virtual unsigned long fileSize() const = 0;
 
         unsigned long devMajor() const
         { return m_devmajor; }
@@ -102,6 +102,9 @@ class CPIOTrailer : public CPIOMember {
     public:
         CPIOTrailer();
 
+        unsigned long fileSize() const
+        { return 0; }
+
         virtual void writeData(std::ostream &os) const;
 };
 
@@ -127,6 +130,9 @@ class CPIODirectory : public CPIOSynth {
     public:
         CPIODirectory(std::string const &name, unsigned long mode = 0755);
 
+        unsigned long fileSize() const
+        { return 0; }
+
         virtual void writeData(std::ostream &os) const;
 };
 
@@ -141,6 +147,9 @@ class CPIOSymlink : public CPIOSynth {
     public:
         CPIOSymlink(std::string const &name, std::string const &target);
 
+        unsigned long fileSize() const
+        { return m_target.size(); }
+
         virtual void writeData(std::ostream &os) const;
 };
 
@@ -151,10 +160,14 @@ class CPIOMemory : public CPIOSynth {
 
     protected:
         const char *m_buf;
+        size_t m_len;
 
     public:
         CPIOMemory(std::string const &name, const char *buf, size_t len,
                    unsigned long mode = 0644);
+
+        unsigned long fileSize() const
+        { return m_len; }
 
         virtual void writeData(std::ostream &os) const;
 };
@@ -166,12 +179,16 @@ class CPIOFile : public CPIOMember {
 
     protected:
         std::string m_srcpath;
+        off_t m_filesize;
 
     public:
         CPIOFile(std::string const &name, std::string const &srcpath);
         CPIOFile(std::string const &path)
             : CPIOFile(path, path)
         { }
+
+        unsigned long fileSize() const
+        { return m_filesize; }
 
         virtual void writeData(std::ostream &os) const;
 };

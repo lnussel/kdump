@@ -43,7 +43,7 @@ using std::make_shared;
 // -----------------------------------------------------------------------------
 CPIOMember::CPIOMember(std::string const &name, unsigned long mode)
     : m_ino(0), m_mode(mode), m_uid(0), m_gid(0), m_nlink(1),
-      m_mtime(0), m_filesize(0), m_devmajor(0), m_devminor(0),
+      m_mtime(0), m_devmajor(0), m_devminor(0),
       m_rdevmajor(0), m_rdevminor(0), m_name(name)
 {
     auto it = m_name.begin();
@@ -100,7 +100,6 @@ void CPIODirectory::writeData(std::ostream &os) const
 CPIOSymlink::CPIOSymlink(std::string const &name, std::string const &target)
     : CPIOSynth(name, 0120777), m_target(target)
 {
-    m_filesize = m_target.length();
 }
 
 // -----------------------------------------------------------------------------
@@ -115,15 +114,14 @@ void CPIOSymlink::writeData(std::ostream &os) const
 // -----------------------------------------------------------------------------
 CPIOMemory::CPIOMemory(std::string const &name, const char *buf, size_t len,
                        unsigned long mode)
-    : CPIOSynth(name, 0100000 | (mode & MODE_MASK)), m_buf(buf)
+    : CPIOSynth(name, 0100000 | (mode & MODE_MASK)), m_buf(buf), m_len(len)
 {
-    m_filesize = len;
 }
 
 // -----------------------------------------------------------------------------
 void CPIOMemory::writeData(std::ostream &os) const
 {
-    os.write(m_buf, m_filesize);
+    os.write(m_buf, m_len);
 }
 
 //}}}
@@ -137,7 +135,6 @@ CPIOFile::CPIOFile(std::string const &dstpath, std::string const &srcpath)
     if (stat(m_srcpath.c_str(), &s))
         throw KSystemError("Cannot stat " + srcpath, errno);
 
-    m_ino = s.st_ino;
     m_mode = s.st_mode;
     m_uid = s.st_uid;
     m_gid = s.st_gid;
