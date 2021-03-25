@@ -73,7 +73,8 @@ KElf::Mapping::~Mapping()
 
 // -----------------------------------------------------------------------------
 KElf::KElf(std::string const &path)
-    : m_fd(-1), m_pagesize(sysconf(_SC_PAGESIZE))
+    : m_fd(-1), m_pagesize(sysconf(_SC_PAGESIZE)),
+      m_dynstr(nullptr)
 {
     m_fd = open(path.c_str(), O_RDONLY);
     if (m_fd < 0)
@@ -225,6 +226,57 @@ Elf_Data *KElf::dynamicData()
         }
     }
     return m_dynamic;
+}
+
+// -----------------------------------------------------------------------------
+Elf_Data *KElf::dynstrData()
+{
+    if (!m_dynstr && dynamicData()) {
+        GElf_Addr addr = 0;
+        GElf_Xword sz = 0;
+
+        GElf_Dyn dyn;
+        for (size_t i = 0; gelf_getdyn(m_dynamic, i, &dyn); ++i)
+            switch (dyn.d_tag) {
+            case DT_STRTAB: addr = dyn.d_un.d_ptr; break;
+            case DT_STRSZ:  sz = dyn.d_un.d_val; break;
+            }
+
+        if (addr && sz) {
+            for (size_t i = 0; i < m_phdrnum; ++i) {
+                GElf_Phdr phdr;
+                getPhdr(i, &phdr);
+                if (phdr.p_vaddr <= addr &&
+                    phdr.p_vaddr + phdr.p_filesz >= addr + sz) {
+                    Elf_Scn *scn = elf_newscn(m_map->elf);
+                    if (!scn)
+                        throw KElfError("Cannot allocate DYNSTR section",
+                                        elf_errno());
+
+                    m_dynstr = elf_newdata(scn);
+                    if (!m_dynstr)
+                        throw KElfError("Cannot allocate DYNSTR data",
+                                        elf_errno());
+
+                    m_dynstr->d_off = phdr.p_offset + addr - phdr.p_vaddr;
+                    m_dynstr->d_size = sz;
+                    break;
+                }
+            }
+        }
+
+        if (m_dynstr) {
+            if (m_dynstr->d_off + m_dynstr->d_size <= m_map->length) {
+                m_dynstr->d_buf = m_map->data + m_dynstr->d_off;
+            } else {
+                m_dynstrmap = map(m_dynstr->d_off, m_dynstr->d_size);
+                m_dynstr->d_buf = m_dynstrmap->data +
+                    m_dynstr->d_off - m_dynstrmap->offset;
+            }
+        }
+    }
+
+    return m_dynstr;
 }
 
 //}}}

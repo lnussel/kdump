@@ -105,6 +105,14 @@ class KElf {
          */
         Elf_Data *dynamicData();
 
+        /**
+         * Get data for the ELF dynamic strings.
+         *
+         * @returns dynamic strings data,
+         *          or @c nullptr if there are no dynamic strings
+         */
+        Elf_Data *dynstrData();
+
     private:
         MappedData m_map;
         long m_pagesize;
@@ -112,6 +120,10 @@ class KElf {
         // DYNAMIC segment
         Elf_Data *m_dynamic;
         MappedData m_dynamicmap;
+
+        // DYNSTR segment
+        Elf_Data *m_dynstr;
+        MappedData m_dynstrmap;
 
         /**
          * Find the end of ELF program and section headers.
