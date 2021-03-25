@@ -25,10 +25,10 @@
 
 using std::string;
 
-//{{{ KELFErrorCode ------------------------------------------------------------
+//{{{ KElfErrorCode ------------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-string KELFErrorCode::message(void) const
+string KElfErrorCode::message(void) const
 {
     return elf_errmsg(getCode());
 }

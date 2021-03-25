@@ -246,7 +246,7 @@ bool Util::isXenCoreDump(int fd)
         map = map_elf(fd, mapsize);
         elf = elf_memory(reinterpret_cast<char *>(map), mapsize);
         if (!elf)
-            throw KELFError("elf_memory() failed", elf_errno());
+            throw KElfError("elf_memory() failed", elf_errno());
 
         if (elf_kind(elf) != ELF_K_ELF)
             return false;
@@ -279,18 +279,18 @@ bool Util::isXenCoreDump(int fd)
             map = map_elf(fd, mapsize);
             elf = elf_memory(reinterpret_cast<char *>(map), mapsize);
             if (!elf)
-                throw KELFError("elf_memory() failed", elf_errno());
+                throw KElfError("elf_memory() failed", elf_errno());
         }
 
         size_t phnum, i;
         if (elf_getphdrnum(elf, &phnum))
-            throw KELFError("Cannot count ELF program headers", elf_errno());
+            throw KElfError("Cannot count ELF program headers", elf_errno());
 
         for (i = 0; i < phnum; ++i) {
             GElf_Phdr phdr;
 
             if (gelf_getphdr(elf, i, &phdr) != &phdr)
-                throw KELFError("getphdr() failed.", elf_errno());
+                throw KElfError("getphdr() failed.", elf_errno());
 
             if (phdr.p_type == PT_NOTE &&
                 FindElfNoteByName(fd, phdr.p_offset, phdr.p_filesz, "Xen")

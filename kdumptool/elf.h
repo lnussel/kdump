@@ -21,21 +21,21 @@
 
 #include "global.h"
 
-//{{{ KELFErrorCode ------------------------------------------------------------
+//{{{ KElfErrorCode ------------------------------------------------------------
 
 /**
  * Class for libelf errors.
  */
-class KELFErrorCode : public KErrorCode {
+class KElfErrorCode : public KErrorCode {
     public:
-        KELFErrorCode(int code)
+        KElfErrorCode(int code)
             : KErrorCode(code)
         {}
 
         virtual std::string message(void) const;
 };
 
-typedef KCodeError<KELFErrorCode> KELFError;
+typedef KCodeError<KElfErrorCode> KElfError;
 
 //}}}
 

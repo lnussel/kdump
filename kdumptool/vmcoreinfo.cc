@@ -148,7 +148,7 @@ ByteVector Vmcoreinfo::readElfNote(const char *file)
         size_t n;
         int ret = elf_getphdrnum(elf, &n);
         if (ret < 0)
-            throw KELFError("elf_getphdrnum() failed.", elf_errno());
+            throw KElfError("elf_getphdrnum() failed.", elf_errno());
 
         // iterate over that entries to find offset and size of the
         // notes section
@@ -156,7 +156,7 @@ ByteVector Vmcoreinfo::readElfNote(const char *file)
             GElf_Phdr phdr;
 
             if (gelf_getphdr(elf, i, &phdr) != &phdr)
-                throw KELFError("getphdr() failed.", elf_errno());
+                throw KElfError("getphdr() failed.", elf_errno());
 
             if (phdr.p_type == PT_NOTE) {
                 offset = phdr.p_offset;
