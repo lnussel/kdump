@@ -76,6 +76,23 @@ class Initrd : public CPIO_newc {
         { return installFile(path, path.dirName().c_str()); }
 
         /**
+         * Install a program file with all dependencies, possibly
+         * overriding the target directory.
+         *
+         * If the program is an ELF dynamically linked binary, all
+         * shared objects are also installed. If it is a script, the
+         * interpreter and its dependencies are installed.
+         *
+         * @param[in] path Path to the file to be installed.
+         * @param[in] destdir Destination directory in the initrd
+         * @returns @c true if the file was added,
+         *          @c false if the target path was already in the archive
+         */
+        bool installProgram(FilePath const &path, const char *destdir);
+        bool installProgram(FilePath const &path)
+        { return installProgram(path, path.dirName().c_str()); }
+
+        /**
          * Install a data file into a target directory.
          *
          * @param[in] name Path under the kdump data directory

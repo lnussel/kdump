@@ -20,6 +20,7 @@
 #include <cctype>
 #include <string>
 #include <sstream>
+#include <fstream>
 
 #include "global.h"
 #include "install.h"
@@ -28,6 +29,7 @@
 #include "cpio.h"
 #include "debug.h"
 
+using std::ifstream;
 using std::ostringstream;
 using std::string;
 using std::make_shared;
@@ -81,6 +83,38 @@ bool Initrd::installFile(FilePath const &path, const char *destdir)
     FilePath dst(destdir);
     dst.appendPath(path.baseName());
     return addPath(make_shared<CPIOFile>(dst, path));
+}
+
+// -----------------------------------------------------------------------------
+bool Initrd::installProgram(FilePath const &path, const char *destdir)
+{
+    if (!installFile(path, destdir))
+        return false;
+
+    FilePath const *binary = &path;
+    FilePath interp;
+
+    char c, marker[2];
+    ifstream fin(path);
+    if (fin && fin.read(marker, 2) &&
+        marker[0] == '#' && marker[1] == '!') {
+        while (fin.get(c) && (c == ' ' || c == '\t'));
+        do {
+            interp.push_back(c);
+        } while (fin.get(c) && !(c == ' ' || c == '\t' || c == '\n'));
+        if (fin.bad() || interp.empty())
+            return true;
+        if (!installFile(interp, destdir))
+            return true;
+
+        binary = &interp;
+    }
+
+    SharedDependencies deps(*binary);
+    for (auto const &lib : deps)
+        addPath(make_shared<CPIOFile>(lib));
+
+    return true;
 }
 
 // -----------------------------------------------------------------------------
