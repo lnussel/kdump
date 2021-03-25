@@ -94,6 +94,29 @@ KElf::KElf(std::string const &path)
         throw KElfError("Cannot count ELF program headers", elf_errno());
     if (elf_getshdrnum(m_map->elf, &m_shdrnum))
         throw KElfError("Cannot count ELF section headers", elf_errno());
+
+    m_dynamic = nullptr;
+    for (size_t i = 0; i < m_phdrnum; ++i) {
+        GElf_Phdr phdr;
+        getPhdr(i, &phdr);
+        if (phdr.p_type == PT_DYNAMIC) {
+            if (m_dynamic)
+                throw KError("Multiple DYNAMIC segments found");
+
+            Elf_Scn *scn = elf_newscn(m_map->elf);
+            if (!scn)
+                throw KElfError("Cannot allocate DYNAMIC section",
+                                elf_errno());
+
+            m_dynamic = elf_newdata(scn);
+            if (!m_dynamic)
+                throw KElfError("Cannot allocate DYNAMIC data", elf_errno());
+
+            m_dynamic->d_off = phdr.p_offset;
+            m_dynamic->d_size = phdr.p_filesz;
+            m_dynamic->d_type = ELF_T_DYN;
+        }
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -187,6 +210,17 @@ Elf_Scn *KElf::getScn(int index) const
     if (!ret)
         throw KElfError("Cannot get ELF section descriptor", elf_errno());
     return ret;
+}
+
+// -----------------------------------------------------------------------------
+Elf_Data *KElf::dynamicData()
+{
+    if (m_dynamic && !m_dynamic->d_buf) {
+        m_dynamicmap = map(m_dynamic->d_off, m_dynamic->d_size);
+        m_dynamic->d_buf = m_dynamicmap->data +
+            m_dynamic->d_off - m_dynamicmap->offset;
+    }
+    return m_dynamic;
 }
 
 //}}}
