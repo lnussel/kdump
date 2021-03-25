@@ -76,6 +76,14 @@ SharedDependencies::SharedDependencies(string const &path)
 const char Initrd::DATA_DIRECTORY[] = "/usr/lib/kdump";
 
 // -----------------------------------------------------------------------------
+bool Initrd::installFile(FilePath const &path, const char *destdir)
+{
+    FilePath dst(destdir);
+    dst.appendPath(path.baseName());
+    return addPath(make_shared<CPIOFile>(dst, path));
+}
+
+// -----------------------------------------------------------------------------
 bool Initrd::installData(const char *name, const char *destdir)
 {
     FilePath src(DATA_DIRECTORY);

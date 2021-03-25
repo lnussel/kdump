@@ -63,6 +63,19 @@ class Initrd : public CPIO_newc {
         { }
 
         /**
+         * Install a regular file in the initrd, possibly overriding
+         * the target directory.
+         *
+         * @param[in] path Path to the file to be installed.
+         * @param[in] destdir Destination directory in the initrd
+         * @returns @c true if the file was added,
+         *          @c false if the target path was already in the archive
+         */
+        bool installFile(FilePath const &path, const char *destdir);
+        bool installFile(FilePath const &path)
+        { return installFile(path, path.dirName().c_str()); }
+
+        /**
          * Install a data file into a target directory.
          *
          * @param[in] name Path under the kdump data directory
