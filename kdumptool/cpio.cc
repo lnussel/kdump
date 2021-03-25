@@ -95,17 +95,18 @@ void CPIODirectory::writeData(std::ostream &os) const
 }
 
 //}}}
-//{{{ CPIOSymlink --------------------------------------------------------------
+//{{{ CPIOString ---------------------------------------------------------------
 
-CPIOSymlink::CPIOSymlink(std::string const &name, std::string const &target)
-    : CPIOSynth(name, 0120777), m_target(target)
+CPIOString::CPIOString(std::string const &name, std::string const &_content,
+                       unsigned long mode)
+    : CPIOSynth(name, mode), content(_content)
 {
 }
 
 // -----------------------------------------------------------------------------
-void CPIOSymlink::writeData(std::ostream &os) const
+void CPIOString::writeData(std::ostream &os) const
 {
-    os << m_target;
+    os << content;
 }
 
 //}}}

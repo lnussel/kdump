@@ -137,20 +137,33 @@ class CPIODirectory : public CPIOSynth {
 };
 
 //}}}
-//{{{ CPIOSymlink --------------------------------------------------------------
+//{{{ CPIOString ---------------------------------------------------------------
 
-class CPIOSymlink : public CPIOSynth {
-
-    protected:
-        std::string m_target;
-
+/**
+ * CPIO members that store their content in a C++ string.
+ * This class is directly usable for regular files.
+ */
+class CPIOString : public CPIOSynth {
     public:
-        CPIOSymlink(std::string const &name, std::string const &target);
+        std::string content;
+
+        CPIOString(std::string const &name, std::string const &content,
+                   unsigned long mode = 0100644);
 
         unsigned long fileSize() const
-        { return m_target.size(); }
+        { return content.size(); }
 
         virtual void writeData(std::ostream &os) const;
+};
+
+//}}}
+//{{{ CPIOSymlink --------------------------------------------------------------
+
+class CPIOSymlink : public CPIOString {
+    public:
+        CPIOSymlink(std::string const &name, std::string const &target)
+            : CPIOString(name, target, 0120777)
+        { }
 };
 
 //}}}
