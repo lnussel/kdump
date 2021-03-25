@@ -100,6 +100,19 @@ class KElf {
     private:
         MappedData m_map;
         long m_pagesize;
+
+        /**
+         * Find the end of ELF program and section headers.
+         *
+         * On 32-bit systems, the whole ELF file cannot be mapped,
+         * because a core dump may be larger than process virtual
+         * address space. To parse the file with libelf, it is
+         * necessary to map at least as much of the beginning of
+         * the ELF file to cover all program and section headers.
+         *
+         * @returns end offset of program and section headers
+         */
+        off_t _headersEndOffset();
 };
 
 //}}}

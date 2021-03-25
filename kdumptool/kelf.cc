@@ -82,9 +82,27 @@ KElf::KElf(std::string const &path)
     if (elf_version(EV_CURRENT) == EV_NONE)
         throw KError("libelf is out of date.");
 
+    off_t endhdr = _headersEndOffset();
+    if (endhdr > m_map->length)
+        m_map = map(0, endhdr);
+
+    m_map->elf = elf_memory(m_map->data, m_map->length);
+    if (!m_map->elf)
+        throw KElfError("elf_memory() failed", elf_errno());
+
+    if (elf_getphdrnum(m_map->elf, &m_phdrnum))
+        throw KElfError("Cannot count ELF program headers", elf_errno());
+    if (elf_getshdrnum(m_map->elf, &m_shdrnum))
+        throw KElfError("Cannot count ELF section headers", elf_errno());
+}
+
+// -----------------------------------------------------------------------------
+off_t KElf::_headersEndOffset()
+{
     // One page should always be enough for ELF file headers
     m_map = map(0, m_pagesize);
 
+    // Check identifiers
     char *ident = m_map->data;
     if (memcmp(ident, ELFMAG, SELFMAG))
         throw KError("Not an ELF file");
@@ -93,7 +111,7 @@ KElf::KElf(std::string const &path)
     if (ident[EI_DATA] != ELFDATA_MINE)
         throw KError("Unsupported ELF data encoding");
 
-    // map enough of the file to read program headers and section headers
+    // get end of program headers and section headers
     off_t endphdr, endshdr;
     if (ident[EI_CLASS] == ELFCLASS32) {
         Elf32_Ehdr *ehdr = reinterpret_cast<Elf32_Ehdr*>(m_map->data);
@@ -105,19 +123,7 @@ KElf::KElf(std::string const &path)
         endshdr = ehdr->e_shoff + ehdr->e_shentsize * ehdr->e_shnum;
     } else
         throw KError("Unsupported ELF class");
-
-    off_t endhdr = std::max(endphdr, endshdr);
-    if (endhdr > m_pagesize)
-        m_map = map(0, endhdr);
-
-    m_map->elf = elf_memory(m_map->data, m_map->length);
-    if (!m_map->elf)
-        throw KElfError("elf_memory() failed", elf_errno());
-
-    if (elf_getphdrnum(m_map->elf, &m_phdrnum))
-        throw KElfError("Cannot count ELF program headers", elf_errno());
-    if (elf_getshdrnum(m_map->elf, &m_shdrnum))
-        throw KElfError("Cannot count ELF section headers", elf_errno());
+    return std::max(endphdr, endshdr);
 }
 
 // -----------------------------------------------------------------------------
