@@ -25,10 +25,12 @@
 #include "install.h"
 #include "process.h"
 #include "stringutil.h"
+#include "cpio.h"
 #include "debug.h"
 
 using std::ostringstream;
 using std::string;
+using std::make_shared;
 
 //{{{ SharedDependencies -------------------------------------------------------
 
@@ -66,6 +68,23 @@ SharedDependencies::SharedDependencies(string const &path)
         if (!error.empty())
             throw KError("Cannot get shared dependencies: " + error.trim());
     }
+}
+
+//}}}
+//{{{ Initrd -------------------------------------------------------------------
+
+const char Initrd::DATA_DIRECTORY[] = "/usr/lib/kdump";
+
+// -----------------------------------------------------------------------------
+bool Initrd::installData(const char *name, const char *destdir)
+{
+    FilePath src(DATA_DIRECTORY);
+    FilePath dst(destdir);
+
+    src.appendPath(name);
+    dst.appendPath(name);
+
+    return addPath(make_shared<CPIOFile>(dst, src));
 }
 
 //}}}

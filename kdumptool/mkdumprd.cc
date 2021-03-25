@@ -25,14 +25,12 @@
 #include "config.h"
 #include "optionparser.h"
 #include "configuration.h"
-#include "cpio.h"
+#include "install.h"
 #include "fileutil.h"
 
 #define PROGRAM_NAME                "mkdumprd"
 #define PROGRAM_VERSION_STRING      PROGRAM_NAME " " PACKAGE_VERSION
 #define DEFAULT_CONFIG              "/etc/sysconfig/kdump"
-
-static const char DATA_DIRECTORY[] = "/usr/lib/kdump";
 
 static const char SYSTEM_UNIT_DIR[] = "/usr/lib/systemd/system";
 
@@ -42,7 +40,7 @@ using std::string;
 
 class MakeDumpRamDisk {
 
-        CPIO_newc m_cpio;
+        Initrd m_cpio;
 
     public:
         MakeDumpRamDisk()
@@ -54,7 +52,6 @@ class MakeDumpRamDisk {
 
     private:
         FilePath systemUnitPath(const char *name);
-        bool addDataFile(const char *name, const char *destdir);
 };
 
 // -----------------------------------------------------------------------------
@@ -142,21 +139,9 @@ FilePath MakeDumpRamDisk::systemUnitPath(const char *name)
 }
 
 // -----------------------------------------------------------------------------
-bool MakeDumpRamDisk::addDataFile(const char *name, const char *destdir)
-{
-    FilePath src(DATA_DIRECTORY);
-    FilePath dst(destdir);
-
-    src.appendPath(name);
-    dst.appendPath(name);
-
-    return m_cpio.addPath(std::make_shared<CPIOFile>(dst, src));
-}
-
-// -----------------------------------------------------------------------------
 int MakeDumpRamDisk::execute()
 {
-    addDataFile("kdump.target", SYSTEM_UNIT_DIR);
+    m_cpio.installData("kdump.target", SYSTEM_UNIT_DIR);
     m_cpio.symlink("kdump.target", systemUnitPath("default.target"));
 
     m_cpio.write(std::cout);

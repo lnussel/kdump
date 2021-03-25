@@ -23,6 +23,9 @@
 #include <list>
 #include <string>
 
+#include "fileutil.h"
+#include "cpio.h"
+
 //{{{ SharedDependencies -------------------------------------------------------
 
 /**
@@ -46,6 +49,28 @@ public:
     { return m_list.begin(); }
     const_iterator end() const
     { return m_list.end(); }
+};
+
+//}}}
+//{{{ Initrd -------------------------------------------------------------------
+
+class Initrd : public CPIO_newc {
+    public:
+        static const char DATA_DIRECTORY[];
+
+        Initrd()
+            : CPIO_newc()
+        { }
+
+        /**
+         * Install a data file into a target directory.
+         *
+         * @param[in] name Path under the kdump data directory
+         * @param[in] destdir Destination directory in the initrd
+         * @returns @c true if the file was added,
+         *          @c false if the target path was already in the archive
+         */
+        bool installData(const char *name, const char *destdir);
 };
 
 //}}}
