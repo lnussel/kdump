@@ -97,33 +97,9 @@ class KElf {
         typedef std::unique_ptr<struct Mapping> MappedData;
         MappedData map(off_t offset, size_t length);
 
-        /**
-         * Get data for the ELF DYNAMIC segment.
-         *
-         * @returns dynamic segment data,
-         *          or @c nullptr if there is no dynamic segment
-         */
-        Elf_Data *dynamicData();
-
-        /**
-         * Get data for the ELF dynamic strings.
-         *
-         * @returns dynamic strings data,
-         *          or @c nullptr if there are no dynamic strings
-         */
-        Elf_Data *dynstrData();
-
     private:
         MappedData m_map;
         unsigned long m_pagesize;
-
-        // DYNAMIC segment
-        Elf_Data *m_dynamic;
-        MappedData m_dynamicmap;
-
-        // DYNSTR segment
-        Elf_Data *m_dynstr;
-        MappedData m_dynstrmap;
 
         /**
          * Find the end of ELF program and section headers.

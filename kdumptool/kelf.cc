@@ -73,8 +73,7 @@ KElf::Mapping::~Mapping()
 
 // -----------------------------------------------------------------------------
 KElf::KElf(std::string const &path)
-    : m_fd(-1), m_pagesize(sysconf(_SC_PAGESIZE)),
-      m_dynstr(nullptr)
+    : m_fd(-1), m_pagesize(sysconf(_SC_PAGESIZE))
 {
     m_fd = open(path.c_str(), O_RDONLY);
     if (m_fd < 0)
@@ -95,29 +94,6 @@ KElf::KElf(std::string const &path)
         throw KElfError("Cannot count ELF program headers", elf_errno());
     if (elf_getshdrnum(m_map->elf, &m_shdrnum))
         throw KElfError("Cannot count ELF section headers", elf_errno());
-
-    m_dynamic = nullptr;
-    for (size_t i = 0; i < m_phdrnum; ++i) {
-        GElf_Phdr phdr;
-        getPhdr(i, &phdr);
-        if (phdr.p_type == PT_DYNAMIC) {
-            if (m_dynamic)
-                throw KError("Multiple DYNAMIC segments found");
-
-            Elf_Scn *scn = elf_newscn(m_map->elf);
-            if (!scn)
-                throw KElfError("Cannot allocate DYNAMIC section",
-                                elf_errno());
-
-            m_dynamic = elf_newdata(scn);
-            if (!m_dynamic)
-                throw KElfError("Cannot allocate DYNAMIC data", elf_errno());
-
-            m_dynamic->d_off = phdr.p_offset;
-            m_dynamic->d_size = phdr.p_filesz;
-            m_dynamic->d_type = ELF_T_DYN;
-        }
-    }
 }
 
 // -----------------------------------------------------------------------------
@@ -211,72 +187,6 @@ Elf_Scn *KElf::getScn(int index) const
     if (!ret)
         throw KElfError("Cannot get ELF section descriptor", elf_errno());
     return ret;
-}
-
-// -----------------------------------------------------------------------------
-Elf_Data *KElf::dynamicData()
-{
-    if (m_dynamic && !m_dynamic->d_buf) {
-        if (m_dynamic->d_off + m_dynamic->d_size <= m_map->length) {
-            m_dynamic->d_buf = m_map->data + m_dynamic->d_off;
-        } else {
-            m_dynamicmap = map(m_dynamic->d_off, m_dynamic->d_size);
-            m_dynamic->d_buf = m_dynamicmap->data +
-                m_dynamic->d_off - m_dynamicmap->offset;
-        }
-    }
-    return m_dynamic;
-}
-
-// -----------------------------------------------------------------------------
-Elf_Data *KElf::dynstrData()
-{
-    if (!m_dynstr && dynamicData()) {
-        GElf_Addr addr = 0;
-        GElf_Xword sz = 0;
-
-        GElf_Dyn dyn;
-        for (size_t i = 0; gelf_getdyn(m_dynamic, i, &dyn); ++i)
-            switch (dyn.d_tag) {
-            case DT_STRTAB: addr = dyn.d_un.d_ptr; break;
-            case DT_STRSZ:  sz = dyn.d_un.d_val; break;
-            }
-
-        if (addr && sz) {
-            for (size_t i = 0; i < m_phdrnum; ++i) {
-                GElf_Phdr phdr;
-                getPhdr(i, &phdr);
-                if (phdr.p_vaddr <= addr &&
-                    phdr.p_vaddr + phdr.p_filesz >= addr + sz) {
-                    Elf_Scn *scn = elf_newscn(m_map->elf);
-                    if (!scn)
-                        throw KElfError("Cannot allocate DYNSTR section",
-                                        elf_errno());
-
-                    m_dynstr = elf_newdata(scn);
-                    if (!m_dynstr)
-                        throw KElfError("Cannot allocate DYNSTR data",
-                                        elf_errno());
-
-                    m_dynstr->d_off = phdr.p_offset + addr - phdr.p_vaddr;
-                    m_dynstr->d_size = sz;
-                    break;
-                }
-            }
-        }
-
-        if (m_dynstr) {
-            if (m_dynstr->d_off + m_dynstr->d_size <= m_map->length) {
-                m_dynstr->d_buf = m_map->data + m_dynstr->d_off;
-            } else {
-                m_dynstrmap = map(m_dynstr->d_off, m_dynstr->d_size);
-                m_dynstr->d_buf = m_dynstrmap->data +
-                    m_dynstr->d_off - m_dynstrmap->offset;
-            }
-        }
-    }
-
-    return m_dynstr;
 }
 
 //}}}
