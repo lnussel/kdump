@@ -104,6 +104,8 @@ SET(COMMON_SRC
     routable.h
     cpio.cc
     cpio.h
+    install.cc
+    install.h
 )
 
 add_library(common STATIC ${COMMON_SRC})
