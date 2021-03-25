@@ -32,7 +32,14 @@
 #define PROGRAM_VERSION_STRING      PROGRAM_NAME " " PACKAGE_VERSION
 #define DEFAULT_CONFIG              "/etc/sysconfig/kdump"
 
+static const char SYSTEMD_UTIL_DIR[] = "/usr/lib/systemd";
 static const char SYSTEM_UNIT_DIR[] = "/usr/lib/systemd/system";
+
+// programs to be installed in the systemd util dir
+static const char* const systemd_utils[] = {
+    "systemd",
+    NULL
+};
 
 using std::cerr;
 using std::endl;
@@ -141,6 +148,18 @@ FilePath MakeDumpRamDisk::systemUnitPath(const char *name)
 // -----------------------------------------------------------------------------
 int MakeDumpRamDisk::execute()
 {
+    // systemd binaries
+    for (auto name = systemd_utils; *name; ++name) {
+        FilePath path(SYSTEMD_UTIL_DIR);
+        path.appendPath(*name);
+        m_cpio.installProgram(path, SYSTEMD_UTIL_DIR);
+    }
+
+    // link to /init
+    FilePath systemd(SYSTEMD_UTIL_DIR + 1);
+    systemd.appendPath("systemd");
+    m_cpio.symlink(systemd, "/init");
+
     m_cpio.installData("kdump.target", SYSTEM_UNIT_DIR);
     m_cpio.symlink("kdump.target", systemUnitPath("default.target"));
 
