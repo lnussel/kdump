@@ -139,38 +139,20 @@ bool Util::isElfFile(const string &file)
 }
 
 // -----------------------------------------------------------------------------
-static off_t FindElfNoteByName(int fd, off_t offset, size_t sz,
-                               const char *name)
+bool Util::isXenCoreDump(const string &file)
 {
-    char *buf, *p;
-    size_t to_read;
-    size_t nlen;
-    off_t ret = (off_t)-1;
+    Debug::debug()->trace("isXenCoreDump(%s)", file.c_str());
 
-    Debug::debug()->trace("FindElfNoteByName(%d, %lu, %lu, %s)",
-                          fd, (unsigned long)offset, (unsigned long)sz, name);
+    KElf kelf(file);
+    for (size_t i = 0; i < kelf.phdrNum(); ++i) {
+        GElf_Phdr phdr;
+        kelf.getPhdr(i, &phdr);
+        if (phdr.p_type != PT_NOTE)
+            continue;
 
-    if (lseek(fd, offset, SEEK_SET) == (off_t)-1)
-        throw KSystemError("Cannot seek to ELF notes", errno);
-
-    buf = new char[sz];
-    try {
-        to_read = sz;
-        p = buf;
-        while (to_read) {
-            ssize_t bytes_read = read(fd, p, to_read);
-            if (bytes_read < 0)
-                throw KSystemError("Cannot read ELF note", errno);
-            else if (!bytes_read)
-                throw KError("Unexpected EOF while reading ELF note");
-
-            to_read -= bytes_read;
-            p += bytes_read;
-        }
-
-        nlen = strlen(name);
-        to_read = sz;
-        p = buf;
+        KElf::MappedData mapped = kelf.map(phdr.p_offset, phdr.p_filesz);
+        size_t to_read = phdr.p_filesz;
+        char *p = mapped->data + phdr.p_offset - mapped->offset;
         while (to_read) {
             Elf64_Nhdr *hdr = reinterpret_cast<Elf64_Nhdr*>(p);
             if (to_read < sizeof(*hdr))
@@ -184,151 +166,19 @@ static off_t FindElfNoteByName(int fd, off_t offset, size_t sz,
             if (to_read < notesz)
                 break;
 
-            if ((hdr->n_namesz == nlen && !memcmp(p, name, nlen)) ||
-                (hdr->n_namesz == nlen+1 && !memcmp(p, name, nlen+1))) {
-                ret = offset + (p - buf) - sizeof(*hdr);
-                break;
+            if ((hdr->n_namesz == 3 && !memcmp(p, "Xen", 3)) ||
+                (hdr->n_namesz == 4 && !memcmp(p, "Xen", 4))) {
+                Debug::debug()->dbg("Xen ELF note found");
+                return true;
             }
 
             to_read -= notesz;
             p += notesz;
         }
-    } catch (...) {
-        delete buf;
-        throw;
     }
 
-    return ret;
-}
-
-// -----------------------------------------------------------------------------
-#define ELF_HEADER_MAPSIZE          (128*1024)
-
-static void *map_elf(int fd, size_t len)
-{
-    void *map;
-    map = mmap(NULL, len, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (map == MAP_FAILED) {
-	map = mmap(NULL, len, PROT_READ | PROT_WRITE,
-		   MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-	if (map == MAP_FAILED)
-	    throw KSystemError("Cannot allocate ELF headers", errno);
-
-	size_t to_read = len;
-	char *p = reinterpret_cast<char *>(map);
-	while (to_read) {
-	    ssize_t bytes_read = read(fd, p, to_read);
-	    if (bytes_read < 0)
-		throw KSystemError("ELF read error", errno);
-	    else if (!bytes_read)
-		break;
-
-	    to_read -= bytes_read;
-	    p += bytes_read;
-	}
-    }
-    return map;
-}
-
-bool Util::isXenCoreDump(int fd)
-{
-    void *map = MAP_FAILED;
-    Elf *elf = (Elf*)0;
-    bool ret = false;
-    size_t mapsize = ELF_HEADER_MAPSIZE;
-
-    Debug::debug()->trace("isXenCoreDump(%d)", fd);
-
-    if (elf_version(EV_CURRENT) == EV_NONE)
-        throw KError("libelf is out of date.");
-
-    try {
-        map = map_elf(fd, mapsize);
-        elf = elf_memory(reinterpret_cast<char *>(map), mapsize);
-        if (!elf)
-            throw KElfError("elf_memory() failed", elf_errno());
-
-        if (elf_kind(elf) != ELF_K_ELF)
-            return false;
-
-        size_t endphdr;
-        Elf32_Ehdr *ehdr32;
-        Elf64_Ehdr *ehdr64;
-
-        switch (gelf_getclass(elf)) {
-        case ELFCLASS32:
-            ehdr32 = reinterpret_cast<Elf32_Ehdr*>(map);
-            endphdr = ehdr32->e_phoff + ehdr32->e_phentsize * ehdr32->e_phnum;
-            break;
-        case ELFCLASS64:
-            ehdr64 = reinterpret_cast<Elf64_Ehdr*>(map);
-            endphdr = ehdr64->e_phoff + ehdr64->e_phentsize * ehdr64->e_phnum;
-            break;
-        default:
-            throw KError("Unrecognized ELF class");
-        }
-
-        if (endphdr > mapsize) {
-            elf_end(elf);
-            munmap(map, mapsize);
-
-            long pagesize = sysconf(_SC_PAGESIZE);
-            mapsize = (endphdr + pagesize - 1) & ~(pagesize - 1);
-            Debug::debug()->dbg("Enlarging map size to %zu bytes", mapsize);
-
-            map = map_elf(fd, mapsize);
-            elf = elf_memory(reinterpret_cast<char *>(map), mapsize);
-            if (!elf)
-                throw KElfError("elf_memory() failed", elf_errno());
-        }
-
-        size_t phnum, i;
-        if (elf_getphdrnum(elf, &phnum))
-            throw KElfError("Cannot count ELF program headers", elf_errno());
-
-        for (i = 0; i < phnum; ++i) {
-            GElf_Phdr phdr;
-
-            if (gelf_getphdr(elf, i, &phdr) != &phdr)
-                throw KElfError("getphdr() failed.", elf_errno());
-
-            if (phdr.p_type == PT_NOTE &&
-                FindElfNoteByName(fd, phdr.p_offset, phdr.p_filesz, "Xen")
-                != (off_t)-1) {
-                ret = true;
-                break;
-            }
-        }
-    } catch (...) {
-        if (elf)
-            elf_end(elf);
-        if (map != MAP_FAILED)
-            munmap(map, mapsize);
-        throw;
-    }
-
-    munmap(map, mapsize);
-    elf_end(elf);
-    return ret;
-}
-
-// -----------------------------------------------------------------------------
-bool Util::isXenCoreDump(const string &file)
-{
-    int fd = open(file.c_str(), O_RDONLY);
-    if (fd < 0) {
-        throw KSystemError("Opening of " + file + " failed.", errno);
-    }
-
-    bool ret;
-    try {
-         ret = isXenCoreDump(fd);
-    } catch (...) {
-        close(fd);
-        throw;
-    }
-
-    return ret;
+    Debug::debug()->dbg("NOT a Xen core dump", file.c_str());
+    return false;
 }
 
 // -----------------------------------------------------------------------------

@@ -96,15 +96,6 @@ class Util {
         static bool isXenCoreDump(const std::string &filename);
 
         /**
-         * Checks if @p filename is a Xen core dump.
-         *
-         * @param[in] fd a file descriptor
-         * @return @c true if it's a Xen core dump, @c false otherwise
-         * @exception KError if opening the file failed
-         */
-        static bool isXenCoreDump(int fd);
-
-        /**
          * Makes the current process a daemon running in the background.
          *
          * @exception KError if something goes wrong
