@@ -466,12 +466,12 @@ PathMountPoint::PathMountPoint(PathMountPoint const &other)
 //{{{ FilesystemTypeMap --------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-void FilesystemTypeMap::addPath(FilePath const& path)
+void FilesystemTypeMap::addMount(PathMountPoint const& mp)
 {
-    Debug::debug()->trace("FilesystemTypeMap::addPath(%s)", path.c_str());
+    Debug::debug()->trace("FilesystemTypeMap::addMount(%s on %s)",
+                          mp.target(), mp.source());
 
-    PathMountPoint mnt(path, m_resolver);
-    for (auto const &src : mnt.resolvedSources())
+    for (auto const &src : mp.resolvedSources())
         m_sources.insert(src);
 }
 

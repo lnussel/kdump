@@ -272,7 +272,7 @@ class FilesystemTypeMap {
         StringStringMap m_devices;
 
     public:
-        void addPath(FilePath const& path);
+        void addMount(PathMountPoint const& mp);
         StringStringMap& devices(void);
 };
 

@@ -1038,11 +1038,12 @@ void Calibrate::execute()
 
         // LUKS Argon2 hash requires a lot of memory
         try {
+            DevicePathResolver dpr;
             FilesystemTypeMap map;
 
             if (config->KDUMP_COPY_KERNEL.value()) {
                 try {
-                    map.addPath("/boot");
+                    map.addMount(PathMountPoint("/boot", dpr));
                 } catch (KError&) {
                     // ignore device resolution failures
                 }
@@ -1054,7 +1055,7 @@ void Calibrate::execute()
                 RootDirURL url(elem, std::string());
                 if (url.getProtocol() == RootDirURL::PROT_FILE) {
                     try {
-                        map.addPath(url.getRealPath());
+                        map.addMount(PathMountPoint(url.getRealPath(), dpr));
                     } catch (KError&) {
                         // ignore device resolution failures
                     }
