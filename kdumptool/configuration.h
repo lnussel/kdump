@@ -23,6 +23,7 @@
 #include <typeinfo>
 
 #include "global.h"
+#include "configparser.h"
 
 //{{{ ConfigOption -------------------------------------------------------------
 /**
@@ -266,6 +267,13 @@ class Configuration {
          * @return the configuration object
          */
         static Configuration *config();
+
+        /**
+         * Updates the configuration using the given parser.
+         *
+         * @param cp parser to be used
+         */
+        void update(ConfigParser &&cp);
 
         /**
          * Reads a configuration file.

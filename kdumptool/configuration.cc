@@ -109,45 +109,30 @@ Configuration::Configuration()
 }
 
 /* -------------------------------------------------------------------------- */
-void Configuration::readFile(const string &filename)
+void Configuration::update(ConfigParser &&cp)
 {
-    ShellConfigParser cp(filename);
-
     std::vector<ConfigOption*>::iterator it;
-    for (it = m_options.begin(); it != m_options.end(); ++it) {
-        ConfigOption *opt = *it;
+    for (auto &opt : m_options)
         cp.addVariable(opt->name(), opt->valueAsString());
-    }
 
     cp.parse();
 
-    for (it = m_options.begin(); it != m_options.end(); ++it) {
-        ConfigOption *opt = *it;
+    for (auto &opt : m_options)
         opt->update(cp.getValue(opt->name()));
-    }
 
     m_readConfig = true;
 }
 
 /* -------------------------------------------------------------------------- */
+void Configuration::readFile(const string &filename)
+{
+    update(ShellConfigParser(filename));
+}
+
+/* -------------------------------------------------------------------------- */
 void Configuration::readCmdLine(const string &filename)
 {
-    KernelConfigParser cp(filename);
-
-    std::vector<ConfigOption*>::iterator it;
-    for (it = m_options.begin(); it != m_options.end(); ++it) {
-        ConfigOption *opt = *it;
-        cp.addVariable(opt->name(), opt->valueAsString());
-    }
-
-    cp.parse();
-
-    for (it = m_options.begin(); it != m_options.end(); ++it) {
-        ConfigOption *opt = *it;
-        opt->update(cp.getValue(opt->name()));
-    }
-
-    m_readConfig = true;
+    update(KernelConfigParser(filename));
 }
 
 // -----------------------------------------------------------------------------
