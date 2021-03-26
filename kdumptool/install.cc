@@ -104,7 +104,7 @@ bool Initrd::installProgram(FilePath const &path, const char *destdir)
         } while (fin.get(c) && !(c == ' ' || c == '\t' || c == '\n'));
         if (fin.bad() || interp.empty())
             return true;
-        if (!installFile(interp, destdir))
+        if (!installFile(interp))
             return true;
 
         binary = &interp;

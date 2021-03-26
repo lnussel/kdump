@@ -7,3 +7,5 @@
 
 #define HAVE_LIBESMTP       @ESMTP_FOUND@
 #define HAVE_FADUMP         @HAVE_FADUMP@
+
+#define INSTALL_PREFIX      "@CMAKE_INSTALL_PREFIX@"

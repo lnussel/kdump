@@ -1,0 +1,18 @@
+[Unit]
+Description=save kernel crash dump
+Documentation=man:kdump(7)
+Before=initrd-parse-etc.service
+ConditionPathExists=/proc/vmcore
+
+[Service]
+Type=oneshot
+ExecStart=/kdump/bin/save_dump.sh
+StandardInput=tty
+StandardOutput=tty
+StandardError=tty
+KillMode=process
+RemainAfterExit=yes
+
+# Bash ignores SIGTERM, so we send SIGHUP instead, to ensure that bash
+# terminates cleanly.
+KillSignal=SIGHUP

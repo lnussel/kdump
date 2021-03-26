@@ -32,8 +32,13 @@
 #define PROGRAM_VERSION_STRING      PROGRAM_NAME " " PACKAGE_VERSION
 #define DEFAULT_CONFIG              "/etc/sysconfig/kdump"
 
+static const char SBIN_DIR[] = "/sbin";
 static const char SYSTEMD_UTIL_DIR[] = "/usr/lib/systemd";
 static const char SYSTEM_UNIT_DIR[] = "/usr/lib/systemd/system";
+
+// kdump directories in the initrd
+static const char KDUMPRD_BASE_DIR[] = "/kdump";
+static const char KDUMPRD_BIN_DIR[]  = "/kdump/bin";
 
 // programs to be installed in the systemd util dir
 static const char* const systemd_utils[] = {
@@ -173,21 +178,32 @@ FilePath MakeDumpRamDisk::systemUnitPath(const char *name)
 // -----------------------------------------------------------------------------
 int MakeDumpRamDisk::execute()
 {
+    FilePath path;
+
     // systemd binaries
     for (auto name = systemd_utils; *name; ++name) {
-        FilePath path(SYSTEMD_UTIL_DIR);
+        path.assign(SYSTEMD_UTIL_DIR);
         path.appendPath(*name);
         m_cpio.installProgram(path, SYSTEMD_UTIL_DIR);
     }
 
     // link to /init
-    FilePath systemd(SYSTEMD_UTIL_DIR + 1);
-    systemd.appendPath("systemd");
-    m_cpio.symlink(systemd, "/init");
+    path.assign(SYSTEMD_UTIL_DIR + 1);
+    path.appendPath("systemd");
+    m_cpio.symlink(path, "/init");
 
     // systemd system units
     for (auto name = system_units; *name; ++name)
         m_cpio.installFile(systemUnitPath(*name), SYSTEM_UNIT_DIR);
+
+    // kdump binaries and units
+    path.assign(INSTALL_PREFIX);
+    path.appendPath("sbin/kdumptool");
+    m_cpio.installProgram(path, SBIN_DIR);
+    path.assign(Initrd::DATA_DIRECTORY);
+    path.appendPath("save_dump.sh");
+    m_cpio.installProgram(path, KDUMPRD_BIN_DIR);
+    m_cpio.installData("kdump-save.service", SYSTEM_UNIT_DIR);
     m_cpio.installData("kdump.target", SYSTEM_UNIT_DIR);
 
     // additional systemd links
