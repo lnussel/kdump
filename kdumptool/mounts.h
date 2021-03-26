@@ -251,11 +251,15 @@ class DevicePathResolver {
  * Information about the mount point that corresponds to a file path.
  */
 class PathMountPoint : public MountPoint {
+    protected:
+        StringList m_sources;
+
     public:
-        PathMountPoint(FilePath const& path);
-        PathMountPoint(PathMountPoint const &other)
-            : MountPoint(other)
-        { }
+        PathMountPoint(FilePath const& path, DevicePathResolver &resolver);
+        PathMountPoint(PathMountPoint const &other);
+
+        StringList const& resolvedSources() const
+        { return m_sources; }
 };
 
 //}}}

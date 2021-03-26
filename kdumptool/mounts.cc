@@ -404,7 +404,8 @@ StringVector Btrfs::getDeviceList(void)
 //{{{ PathMountPoint -----------------------------------------------------------
 
 // -----------------------------------------------------------------------------
-PathMountPoint::PathMountPoint(FilePath const& path)
+PathMountPoint::PathMountPoint(FilePath const& path,
+                               DevicePathResolver &resolver)
     : MountPoint(NULL)
 {
     Debug::debug()->trace("PathMountPoint::PathMountPoint(%s)", path.c_str());
@@ -440,9 +441,25 @@ PathMountPoint::PathMountPoint(FilePath const& path)
     if (*best) {
         Debug::debug()->dbg("Filesystem on %s mounted at %s",
                             source(), target());
+
+        if (string(fstype()) == "btrfs") {
+            Debug::debug()->dbg("Enumerating %s btrfs devices", target());
+
+            Btrfs btrfs(target());
+            for (auto const &dev : btrfs.getDeviceList())
+                m_sources.emplace_back(resolver.resolve(dev));
+        } else {
+            m_sources.emplace_back(resolver.resolve(source()));
+        }
     } else {
         Debug::debug()->dbg("No filesystem found!");
     }
+}
+
+// -----------------------------------------------------------------------------
+PathMountPoint::PathMountPoint(PathMountPoint const &other)
+    : MountPoint(other), m_sources(other.m_sources)
+{
 }
 
 //}}}
@@ -453,22 +470,9 @@ void FilesystemTypeMap::addPath(FilePath const& path)
 {
     Debug::debug()->trace("FilesystemTypeMap::addPath(%s)", path.c_str());
 
-    PathMountPoint mnt(path);
-    if (mnt) {
-        if (string(mnt.fstype()) == "btrfs") {
-            Debug::debug()->dbg("Enumerating %s btrfs devices", mnt.target());
-
-            Btrfs btrfs(mnt.target());
-            StringVector devices = btrfs.getDeviceList();
-            for (StringVector::iterator it = devices.begin();
-                 it != devices.end();
-                 ++it) {
-                m_sources.insert(m_resolver.resolve(*it));
-            }
-        } else {
-            m_sources.insert(m_resolver.resolve(mnt.source()));
-        }
-    }
+    PathMountPoint mnt(path, m_resolver);
+    for (auto const &src : mnt.resolvedSources())
+        m_sources.insert(src);
 }
 
 // -----------------------------------------------------------------------------
