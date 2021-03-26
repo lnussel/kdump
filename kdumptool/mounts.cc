@@ -187,51 +187,6 @@ FstabMountTable::FstabMountTable(void)
 }
 
 //}}}
-//{{{ PathMountPoint -----------------------------------------------------------
-
-// -----------------------------------------------------------------------------
-PathMountPoint::PathMountPoint(FilePath const& path)
-    : MountPoint(NULL)
-{
-    Debug::debug()->trace("PathMountPoint::PathMountPoint(%s)", path.c_str());
-
-    MountTable::iterator mp_kernel =
-        KernelMountTable().find_mount(path);
-    MountTable::iterator mp_fstab =
-        FstabMountTable().find_mount(path);
-    MountTable::iterator *best;
-
-    if (!mp_fstab) {
-        Debug::debug()->dbg("%s: No fstab entry", path.c_str());
-        best = &mp_kernel;
-    } else if (!mp_kernel) {
-        Debug::debug()->dbg("%s: No kernel entry", path.c_str());
-        best = &mp_fstab;
-    } else {
-        Debug::debug()->dbg("%s: Kernel entry: %s, fstab entry: %s",
-                            path.c_str(),
-                            mp_kernel->canonicalTarget().c_str(),
-                            mp_fstab->canonicalTarget().c_str());
-
-        // both exist: choose the longer one, or fstab if same length
-        if (mp_kernel->canonicalTarget().length() >
-            mp_fstab->canonicalTarget().length()) {
-            best = &mp_kernel;
-        } else {
-            best = &mp_fstab;
-        }
-    }
-    MountPoint::operator=(**best);
-
-    if (*best) {
-        Debug::debug()->dbg("Filesystem on %s mounted at %s",
-                            source(), target());
-    } else {
-        Debug::debug()->dbg("No filesystem found!");
-    }
-}
-
-//}}}
 //{{{ PathResolver -------------------------------------------------------------
 
 const char PathResolver::_PATH_DEV_BLOCK_[] = "/dev/block/";
@@ -418,8 +373,6 @@ bool Btrfs::getDevInfo(struct btrfs_ioctl_dev_info_args *info,
     return true;
 }
 
-//}}}
-
 // -----------------------------------------------------------------------------
 StringVector Btrfs::getDeviceList(void)
 {
@@ -445,6 +398,51 @@ StringVector Btrfs::getDeviceList(void)
     }
 
     return ret;
+}
+
+//}}}
+//{{{ PathMountPoint -----------------------------------------------------------
+
+// -----------------------------------------------------------------------------
+PathMountPoint::PathMountPoint(FilePath const& path)
+    : MountPoint(NULL)
+{
+    Debug::debug()->trace("PathMountPoint::PathMountPoint(%s)", path.c_str());
+
+    MountTable::iterator mp_kernel =
+        KernelMountTable().find_mount(path);
+    MountTable::iterator mp_fstab =
+        FstabMountTable().find_mount(path);
+    MountTable::iterator *best;
+
+    if (!mp_fstab) {
+        Debug::debug()->dbg("%s: No fstab entry", path.c_str());
+        best = &mp_kernel;
+    } else if (!mp_kernel) {
+        Debug::debug()->dbg("%s: No kernel entry", path.c_str());
+        best = &mp_fstab;
+    } else {
+        Debug::debug()->dbg("%s: Kernel entry: %s, fstab entry: %s",
+                            path.c_str(),
+                            mp_kernel->canonicalTarget().c_str(),
+                            mp_fstab->canonicalTarget().c_str());
+
+        // both exist: choose the longer one, or fstab if same length
+        if (mp_kernel->canonicalTarget().length() >
+            mp_fstab->canonicalTarget().length()) {
+            best = &mp_kernel;
+        } else {
+            best = &mp_fstab;
+        }
+    }
+    MountPoint::operator=(**best);
+
+    if (*best) {
+        Debug::debug()->dbg("Filesystem on %s mounted at %s",
+                            source(), target());
+    } else {
+        Debug::debug()->dbg("No filesystem found!");
+    }
 }
 
 //}}}

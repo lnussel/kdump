@@ -217,17 +217,6 @@ class FstabMountTable : public MountTable {
 };
 
 //}}}
-//{{{ PathMountPoint -----------------------------------------------------------
-
-class PathMountPoint : public MountPoint {
-    public:
-        PathMountPoint(FilePath const& path);
-        PathMountPoint(PathMountPoint const &other)
-            : MountPoint(other)
-        { }
-};
-
-//}}}
 //{{{ PathResolver -------------------------------------------------------------
 
 class PathResolver {
@@ -249,6 +238,20 @@ class PathResolver {
 
         bool _devroot_maj_min(void);
         bool _devroot_hexhex(void);
+};
+
+//}}}
+//{{{ PathMountPoint -----------------------------------------------------------
+
+/**
+ * Information about the mount point that corresponds to a file path.
+ */
+class PathMountPoint : public MountPoint {
+    public:
+        PathMountPoint(FilePath const& path);
+        PathMountPoint(PathMountPoint const &other)
+            : MountPoint(other)
+        { }
 };
 
 //}}}
