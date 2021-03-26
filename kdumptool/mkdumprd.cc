@@ -18,6 +18,7 @@
  */
 
 #include <iostream>
+#include <sstream>
 #include <memory>
 
 #include "global.h"
@@ -27,6 +28,8 @@
 #include "configuration.h"
 #include "install.h"
 #include "fileutil.h"
+#include "savedirs.h"
+#include "mounts.h"
 
 #define PROGRAM_NAME                "mkdumprd"
 #define PROGRAM_VERSION_STRING      PROGRAM_NAME " " PACKAGE_VERSION
@@ -39,6 +42,7 @@ static const char SYSTEM_UNIT_DIR[] = "/usr/lib/systemd/system";
 // kdump directories in the initrd
 static const char KDUMPRD_BASE_DIR[] = "/kdump";
 static const char KDUMPRD_BIN_DIR[]  = "/kdump/bin";
+static const char KDUMPRD_MNT_DIR[]  = "/kdump/mnt";
 
 // programs to be installed in the systemd util dir
 static const char* const systemd_utils[] = {
@@ -71,9 +75,16 @@ static struct {
     { NULL, NULL }
 };
 
+// systemd service mount dependencies drop-in file
+static const char requires_mounts[] =
+    "[Unit]\n"
+    "RequiresMountsFor=";
+
 using std::cerr;
 using std::endl;
 using std::string;
+using std::ostringstream;
+using std::make_shared;
 
 class MakeDumpRamDisk {
 
@@ -178,6 +189,7 @@ FilePath MakeDumpRamDisk::systemUnitPath(const char *name)
 // -----------------------------------------------------------------------------
 int MakeDumpRamDisk::execute()
 {
+    Configuration *config = Configuration::config();
     FilePath path;
 
     // systemd binaries
@@ -205,6 +217,29 @@ int MakeDumpRamDisk::execute()
     m_cpio.installProgram(path, KDUMPRD_BIN_DIR);
     m_cpio.installData("kdump-save.service", SYSTEM_UNIT_DIR);
     m_cpio.installData("kdump.target", SYSTEM_UNIT_DIR);
+
+    // target mounts
+    DevicePathResolver dpr;
+    StringList dirlist = config->saveDirs();
+    if (config->KDUMP_COPY_KERNEL.value())
+        dirlist.emplace_front("file:///boot");
+
+    SaveDirs savedirs(dirlist, dpr);
+    path.assign(SYSTEM_UNIT_DIR);
+    path.appendPath("kdump-save.service.d/mounts.conf");
+    auto mounts_conf = make_shared<CPIOString>(path, requires_mounts);
+    m_cpio.addPath(mounts_conf);
+    string &mntreq = mounts_conf->content;
+    for (auto const& dir : savedirs.list()) {
+        if (dir.mp) {
+            ostringstream oss;
+            oss << KDUMPRD_MNT_DIR << dir.mountidx << dir.mp->target();
+            m_cpio.addPath(make_shared<CPIODirectory>(oss.str()));
+            mntreq.append(oss.str());
+            mntreq.push_back(' ');
+        }
+    }
+    mntreq.push_back('\n');
 
     // additional systemd links
     for (auto link = system_unit_links; link->path; ++link)
