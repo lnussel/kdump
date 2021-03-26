@@ -187,16 +187,16 @@ FstabMountTable::FstabMountTable(void)
 }
 
 //}}}
-//{{{ PathResolver -------------------------------------------------------------
+//{{{ DevicePathResolver -------------------------------------------------------
 
-const char PathResolver::_PATH_DEV_BLOCK_[] = "/dev/block/";
-const char PathResolver::_PATH_DEV_ROOT[] = "/dev/root";
-const char PathResolver::_PATH_PROC_CMDLINE[] = "/proc/cmdline";
+const char DevicePathResolver::_PATH_DEV_BLOCK_[] = "/dev/block/";
+const char DevicePathResolver::_PATH_DEV_ROOT[] = "/dev/root";
+const char DevicePathResolver::_PATH_PROC_CMDLINE[] = "/proc/cmdline";
 
-FilePath PathResolver::m_devroot;
+FilePath DevicePathResolver::m_devroot;
 
 // -----------------------------------------------------------------------------
-PathResolver::PathResolver()
+DevicePathResolver::DevicePathResolver()
 {
     m_cache = mnt_new_cache();
     if (!m_cache)
@@ -204,13 +204,13 @@ PathResolver::PathResolver()
 }
 
 // -----------------------------------------------------------------------------
-PathResolver::~PathResolver()
+DevicePathResolver::~DevicePathResolver()
 {
     mnt_free_cache(m_cache);
 }
 
 // -----------------------------------------------------------------------------
-bool PathResolver::_devroot_maj_min(void)
+bool DevicePathResolver::_devroot_maj_min(void)
 {
     size_t pos = m_devroot.find(':');
     if (pos == string::npos)
@@ -237,7 +237,7 @@ bool PathResolver::_devroot_maj_min(void)
 }
 
 // -----------------------------------------------------------------------------
-bool PathResolver::_devroot_hexhex(void)
+bool DevicePathResolver::_devroot_hexhex(void)
 {
     dev_t dev;
     if (!m_devroot.isHexNumber())
@@ -264,9 +264,9 @@ static void remove_kparam_quotes(string &s)
 }
 
 // -----------------------------------------------------------------------------
-FilePath& PathResolver::system_root(void)
+FilePath& DevicePathResolver::system_root(void)
 {
-    Debug::debug()->trace("PathResolver::system_root()");
+    Debug::debug()->trace("DevicePathResolver::system_root()");
 
     if (m_devroot.empty()) {
         ifstream fin(_PATH_PROC_CMDLINE);
@@ -315,9 +315,9 @@ FilePath& PathResolver::system_root(void)
 }
 
 // -----------------------------------------------------------------------------
-FilePath PathResolver::resolve(string const& spec)
+FilePath DevicePathResolver::resolve(string const& spec)
 {
-    Debug::debug()->trace("PathResolver::resolve(%s)", spec.c_str());
+    Debug::debug()->trace("DevicePathResolver::resolve(%s)", spec.c_str());
 
     char *path = mnt_resolve_spec(spec.c_str(), m_cache);
     if (!path)

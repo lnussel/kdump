@@ -217,15 +217,19 @@ class FstabMountTable : public MountTable {
 };
 
 //}}}
-//{{{ PathResolver -------------------------------------------------------------
+//{{{ DevicePathResolver -------------------------------------------------------
 
-class PathResolver {
+/**
+ * Convert device specification (e.g. UUID=...) to the block device
+ * path in the filesystem (e.g. /dev/...).
+ */
+class DevicePathResolver {
     protected:
         struct libmnt_cache *m_cache;
 
     public:
-        PathResolver();
-        ~PathResolver();
+        DevicePathResolver();
+        ~DevicePathResolver();
 
         FilePath resolve(std::string const& spec);
         FilePath& system_root(void);
@@ -259,7 +263,7 @@ class PathMountPoint : public MountPoint {
 
 class FilesystemTypeMap {
     protected:
-        PathResolver m_resolver;
+        DevicePathResolver m_resolver;
         std::set<std::string> m_sources;
         StringStringMap m_devices;
 
