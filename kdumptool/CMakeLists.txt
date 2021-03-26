@@ -106,6 +106,8 @@ SET(COMMON_SRC
     cpio.h
     install.cc
     install.h
+    savedirs.cc
+    savedirs.h
 )
 
 add_library(common STATIC ${COMMON_SRC})
