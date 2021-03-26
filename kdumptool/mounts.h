@@ -138,22 +138,22 @@ class MountPoint {
 
         FilePath const& canonicalTarget(void);
 
-        bool isNetFS(void)
+        bool isNetFS(void) const
         { return mnt_fs_is_netfs(m_fs); }
 
-        bool isPseudoFS(void)
+        bool isPseudoFS(void) const
         { return mnt_fs_is_pseudofs(m_fs); }
 
-        bool isSwapArea(void)
+        bool isSwapArea(void) const
         { return mnt_fs_is_swaparea(m_fs); }
 
-        const char *source(void)
+        const char *source(void) const
         { return mnt_fs_get_source(m_fs); }
 
-        const char *target(void)
+        const char *target(void) const
         { return mnt_fs_get_target(m_fs); }
 
-        const char *fstype(void)
+        const char *fstype(void) const
         { return mnt_fs_get_fstype(m_fs); }
 };
 
