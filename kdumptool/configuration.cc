@@ -120,6 +120,11 @@ void Configuration::update(ConfigParser &&cp)
     for (auto &opt : m_options)
         opt->update(cp.getValue(opt->name()));
 
+    std::istringstream iss(KDUMP_SAVEDIR.value());
+    string elem;
+    while (iss >> elem)
+        m_savedirs.emplace_back(elem);
+
     m_readConfig = true;
 }
 
@@ -154,9 +159,7 @@ bool Configuration::needsNetwork()
     if (netconfig != "auto")
 	return true;
 
-    std::istringstream iss(KDUMP_SAVEDIR.value());
-    string elem;
-    while (iss >> elem) {
+    for (auto const& elem : m_savedirs) {
         URLParser url(elem);
         if (url.getProtocol() != URLParser::PROT_FILE)
 	    return true;

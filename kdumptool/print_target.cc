@@ -53,10 +53,8 @@ void PrintTarget::execute()
 
     Configuration *config = Configuration::config();
 
-    istringstream iss(config->KDUMP_SAVEDIR.value());
-    string elem;
     bool first = true;
-    while (iss >> elem) {
+    for (auto const& elem : config->saveDirs()) {
         RootDirURL url(elem, m_rootdir);
         if (first)
             first = false;

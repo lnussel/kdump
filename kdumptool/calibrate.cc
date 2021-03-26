@@ -1049,10 +1049,9 @@ void Calibrate::execute()
                 }
             }
 
-            std::istringstream iss(config->KDUMP_SAVEDIR.value());
-            std::string elem;
-            while (iss >> elem) {
-                RootDirURL url(elem, std::string());
+            std::string rootdir;
+            for (auto const& dir : config->saveDirs()) {
+                RootDirURL url(dir, rootdir);
                 if (url.getProtocol() == RootDirURL::PROT_FILE) {
                     try {
                         map.addMount(PathMountPoint(url.getRealPath(), dpr));

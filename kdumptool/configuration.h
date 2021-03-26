@@ -19,6 +19,7 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 
+#include <list>
 #include <vector>
 #include <typeinfo>
 
@@ -325,6 +326,9 @@ class Configuration {
 	ConfigOptionIterator optionsEnd() const
 	{ return m_options.end(); }
 
+        StringList const& saveDirs() const
+        { return m_savedirs; }
+
     protected:
         Configuration();
 
@@ -336,6 +340,7 @@ class Configuration {
         bool m_readConfig;
 
 	std::vector<ConfigOption*> m_options;
+        StringList m_savedirs;
 };
 
 //}}}

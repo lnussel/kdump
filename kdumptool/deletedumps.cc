@@ -83,9 +83,7 @@ void DeleteDumps::execute()
         return;
     }
 
-    std::istringstream iss(config->KDUMP_SAVEDIR.value());
-    string elem;
-    while (iss >> elem) {
+    for (auto const& elem : config->saveDirs()) {
         RootDirURL url(elem, m_rootdir);
         delete_one(url, oldDumps);
     }

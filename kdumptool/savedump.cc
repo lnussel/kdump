@@ -116,10 +116,9 @@ void SaveDump::execute()
     // prepend a time stamp to the save dir
     string subdir = StringUtil::formatUnixTime(ISO_DATETIME, m_crashtime);
     RootDirURLVector urlv;
-    std::istringstream iss(config->KDUMP_SAVEDIR.value());
-    FilePath elem;
-    while (iss >> elem) {
-        RootDirURL url(elem, m_rootdir);
+    for (auto const& dir : config->saveDirs()) {
+        FilePath elem(dir);
+        URLParser url(dir);
         if (url.getProtocol() != URLParser::PROT_FILE) {
             Routable rt(url.getHostname());
             if (!rt.check(config->KDUMP_NET_TIMEOUT.value())) {
